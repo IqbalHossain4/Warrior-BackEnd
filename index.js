@@ -33,7 +33,6 @@ async function run() {
     });
 
     // get with Id
-
     app.get("/hackathon/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -41,7 +40,7 @@ async function run() {
       res.send(result);
     });
 
-    // Send a ping to confirm a successful connection
+    // Send a ping to confirm a successful connections
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
