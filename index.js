@@ -24,6 +24,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const hackathonCollection = client.db("warrior").collection("hackathons");
+    const userCollection = client.db("warrior").collection("users");
 
     // Get Hackathons
 
@@ -37,6 +38,24 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await hackathonCollection.findOne(query);
+      res.send(result);
+    });
+
+    // user post
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "already exist" });
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    // get User
+    app.get("/user", async (req, res) => {
+      const result = await userCollection.find().toArray();
       res.send(result);
     });
 
