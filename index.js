@@ -32,11 +32,19 @@ async function run() {
       res.send(result);
     });
 
-    // get with Id
+    // get Hackathon with Id
     app.get("/hackathon/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await hackathonCollection.findOne(query);
+      res.send(result);
+    });
+
+    //Delete Hackathon
+    app.delete("/hackathon/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await hackathonCollection.deleteOne(query);
       res.send(result);
     });
 
