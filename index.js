@@ -112,7 +112,13 @@ async function run() {
       }
     );
 
-    
+    //post Hackathons
+    app.post("/hackathon", verifyJWT, async (req, res) => {
+      const query = req.body;
+      const result = await hackathonCollection.insertOne(query);
+      res.send(result);
+    });
+
     // Get Hackathons
     app.get("/hackathon", async (req, res) => {
       const result = await hackathonCollection.find().toArray();
@@ -132,6 +138,17 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await hackathonCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //get Hackathons with specific owner
+    app.get("/ownHackathon", async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        res.send([]);
+      }
+      const query = { email: email };
+      const result = await hackathonCollection.find(query).toArray();
       res.send(result);
     });
 
