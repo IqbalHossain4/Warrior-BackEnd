@@ -60,7 +60,7 @@ async function run() {
       const email = req.decoded.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
-      if (user?.role !== "admin") {
+      if (user?.role !== "isAdmin") {
         return res
           .status(403)
           .send({ error: true, message: "forbidden access" });
@@ -73,7 +73,7 @@ async function run() {
       const email = req.decoded.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
-      if (user?.role !== "mentor") {
+      if (user?.role !== "isMentor") {
         return res
           .status(403)
           .send({ error: true, message: "forbidden access" });
@@ -90,7 +90,7 @@ async function run() {
       }
       const query = { email: email };
       const user = await userCollection.findOne(query);
-      const admin = { admin: user?.role === "admin" };
+      const admin = { admin: user?.role === "isAdmin" };
       res.send(admin);
     });
 
@@ -106,7 +106,7 @@ async function run() {
         }
         const query = { email: email };
         const user = await userCollection.findOne(query);
-        const instructor = { instructor: user?.role === "mentor" };
+        const instructor = { instructor: user?.role === "isMentor" };
         res.send(instructor);
       }
     );
