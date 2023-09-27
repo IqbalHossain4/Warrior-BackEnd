@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -119,8 +118,34 @@ async function run() {
       res.send(result);
     });
 
+    /* Search hackathon */
+    app.get("/hackathonSearch", async (req, res) => {
+      const search = req.query.search;
+      const query = { title: { $regex: search, $options: "i" } };
+      const result = await hackathonCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // Get Hackathons
     // Get Hackathons
     app.get("/hackathon", async (req, res) => {
+      const title = req.query.title;
+      const location = req.query.location;
+      const category = req.query.category;
+      console.log(title, location, category);
+      if (location || category || title) {
+        const result = await hackathonCollection
+          .find({
+            $or: [
+              { title: { $regex: title, $options: "i" } },
+              { location: location },
+              { category: category },
+            ],
+          })
+          .toArray();
+        return res.send(result);
+      }
+
       const result = await hackathonCollection.find().toArray();
       res.send(result);
     });
