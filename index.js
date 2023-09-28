@@ -94,7 +94,6 @@ async function run() {
       res.send(admin);
     });
 
-    // get instructor for dashboard
     app.get(
       "/users/mentor/:email",
       verifyJWT,
@@ -102,12 +101,12 @@ async function run() {
       async (req, res) => {
         const email = req.params.email;
         if (req.decoded.email !== email) {
-          return res.send({ instructor: false });
+          return res.send({ mentor: false });
         }
         const query = { email: email };
         const user = await userCollection.findOne(query);
-        const instructor = { instructor: user?.role === "isMentor" };
-        res.send(instructor);
+        const mentor = { mentor: user?.role === "isMentor" };
+        res.send(mentor);
       }
     );
 
