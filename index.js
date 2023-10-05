@@ -81,8 +81,20 @@ async function run() {
       next();
     };
 
+    //user get
+    app.get(
+      "/users",
+      verifyJWT,
+      verifyAdmin,
+      verifyMentor,
+      async (req, res) => {
+        const result = await userCollection.find().toArray();
+        res.send(result);
+      }
+    );
+
     //get admin for secure dashboard
-    app.get("/users/admin/:email", verifyJWT, verifyAdmin, async (req, res) => {
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const decodedEmail = req.decoded.email;
       const email = req.params.email;
       if (email !== decodedEmail) {
@@ -91,24 +103,47 @@ async function run() {
       const query = { email: email };
       const user = await userCollection.findOne(query);
       const admin = { admin: user?.role === "isAdmin" };
+      console.log(admin);
       res.send(admin);
     });
 
-    app.get(
-      "/users/mentor/:email",
-      verifyJWT,
-      verifyMentor,
-      async (req, res) => {
-        const email = req.params.email;
-        if (req.decoded.email !== email) {
-          return res.send({ mentor: false });
-        }
-        const query = { email: email };
-        const user = await userCollection.findOne(query);
-        const mentor = { mentor: user?.role === "isMentor" };
-        res.send(mentor);
+    app.get("/users/mentor/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email !== email) {
+        return res.send({ mentor: false });
       }
-    );
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const mentor = { mentor: user?.role === "isMentor" };
+      console.log(mentor);
+      res.send(mentor);
+    });
+
+    // user post
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "already exist" });
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    // get User
+    app.get("/user", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    //Delete User
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
 
     //post Hackathons
     app.post("/hackathon", verifyJWT, async (req, res) => {
@@ -126,27 +161,44 @@ async function run() {
     });
 
     // Get Hackathons
-    // Get Hackathons
-    app.get("/hackathon", async (req, res) => {
-      const title = req.query.title;
-      const location = req.query.location;
-      const category = req.query.category;
-      console.log(title, location, category);
-      if (location || category || title) {
-        const result = await hackathonCollection
-          .find({
-            $or: [
-              { title: { $regex: title, $options: "i" } },
-              { location: location },
-              { category: category },
-            ],
-          })
-          .toArray();
-        return res.send(result);
-      }
+    app.get("/hackathons", async (req, res) => {
+      try {
+        const { title, location, category, minFirstPrize, maxFirstPrize } =
+          req.query;
 
-      const result = await hackathonCollection.find().toArray();
-      res.send(result);
+        let query = {};
+
+        if (title) {
+          query.title = { $regex: title, $options: "i" };
+        }
+
+        if (location) {
+          query.location = { $regex: location, $options: "i" };
+        }
+
+        if (category) {
+          query.category = { $regex: category, $options: "i" };
+        }
+
+        if (minFirstPrize || maxFirstPrize) {
+          query.first_prize = {};
+
+          if (minFirstPrize) {
+            query.first_prize.$gte = parseFloat(minFirstPrize);
+          }
+
+          if (maxFirstPrize) {
+            query.first_prize.$lte = parseFloat(maxFirstPrize);
+          }
+        }
+
+        const result = await hackathonCollection.find(query).toArray();
+
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching hackathons:", error);
+        res.status(500).send("Internal Server Error");
+      }
     });
 
     // get Hackathon with Id
@@ -173,32 +225,6 @@ async function run() {
       }
       const query = { email: email };
       const result = await hackathonCollection.find(query).toArray();
-      res.send(result);
-    });
-
-    // user post
-    app.post("/users", async (req, res) => {
-      const user = req.body;
-      const query = { email: user.email };
-      const existingUser = await userCollection.findOne(query);
-      if (existingUser) {
-        return res.send({ message: "already exist" });
-      }
-      const result = await userCollection.insertOne(user);
-      res.send(result);
-    });
-
-    // get User
-    app.get("/user", async (req, res) => {
-      const result = await userCollection.find().toArray();
-      res.send(result);
-    });
-
-    //Delete User
-    app.delete("/users/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await userCollection.deleteOne(query);
       res.send(result);
     });
 
